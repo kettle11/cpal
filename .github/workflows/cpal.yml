@@ -230,7 +230,14 @@ jobs:
         uses: mymindstorm/setup-emsdk@v14
 
       - name: Install Rust toolchain
+        if: ${{ !matrix.build-web-audio-worklet-beep }}
         uses: dtolnay/rust-toolchain@stable
+        with:
+          target: ${{ matrix.target }}
+      
+      - name: Install nightly Rust (for build-std)
+        if: matrix.build-web-audio-worklet-beep
+        uses: dtolnay/rust-toolchain@nightly
         with:
           target: ${{ matrix.target }}
           components: rust-src
@@ -241,6 +248,7 @@ jobs:
           key: wasm-${{ matrix.target }}
 
       - name: Build beep example
+        if: ${{ !matrix.build-web-audio-worklet-beep }}
         run: cargo build --example beep --target ${{ matrix.target }} ${{ matrix.args }}
 
       - name: Build wasm-beep example
@@ -253,7 +261,7 @@ jobs:
         working-directory: ./examples/web-audio-worklet-beep
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
-        run: cargo build --target ${{ matrix.target }} -Z build-std=std,panic_abort
+        run: cargo +nightly build --target ${{ matrix.target }} -Z build-std=std,panic_abort
 
   # Android cross-compilation
   test-android:
